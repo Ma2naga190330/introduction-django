@@ -12,7 +12,10 @@
   <a href="{% url 'portfolio:activity_create' %}">新規登録</a>
   <ul>
     {% for activity in activities %}
-      <li>{{ activity.title }}</li>
+      <li>
+        {{ activity.title }}
+        <a href="{% url 'portfolio:activity_update' activity.pk %}">編集</a>
+      </li>
     {% endfor %}
   </ul>
 </section>

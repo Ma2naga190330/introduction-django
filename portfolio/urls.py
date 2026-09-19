@@ -10,4 +10,5 @@ urlpatterns = [
     path("logout/", auth.logout_view, name="logout"),
     path("dashboard/", dashboard.dashboard_view, name="dashboard"),
     path("activities/new/", activity.activity_create_view, name="activity_create"),
+    path("activities/<int:pk>/edit/", activity.activity_update_view, name="activity_update"),
 ]

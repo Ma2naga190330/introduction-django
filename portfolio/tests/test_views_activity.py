@@ -40,3 +40,36 @@ class ActivityCreateViewTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Activity.objects.count(), 0)
+
+
+class ActivityUpdateViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="admin", password="password123")
+        self.activity = Activity.objects.create(icon="trophy", title="既存の実績")
+
+    def test_requires_login(self):
+        url = reverse("portfolio:activity_update", args=[self.activity.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
+
+    def test_get_prefills_existing_data(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:activity_update", args=[self.activity.pk]))
+        self.assertContains(response, "既存の実績")
+
+    def test_post_valid_data_updates_activity(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:activity_update", args=[self.activity.pk]),
+            {"icon": "trophy", "title": "更新後の実績", "tags": ""},
+        )
+
+        self.assertRedirects(response, reverse("portfolio:dashboard"))
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.title, "更新後の実績")
+
+    def test_get_with_unknown_pk_returns_404(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:activity_update", args=[9999]))
+        self.assertEqual(response.status_code, 404)
