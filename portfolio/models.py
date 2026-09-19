@@ -19,3 +19,15 @@ class Activity(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Certification(models.Model):
+    icon = models.CharField(max_length=50)
+    title = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return self.title

@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from portfolio.models import Activity, Tag
+from portfolio.models import Activity, Certification, Tag
 
 
 class TagModelTest(TestCase):
@@ -32,3 +32,14 @@ class ActivityModelTest(TestCase):
         first = Activity.objects.create(icon="trophy", title="先に登録した実績")
         second = Activity.objects.create(icon="rocket", title="後に登録した実績")
         self.assertEqual(list(Activity.objects.all()), [first, second])
+
+
+class CertificationModelTest(TestCase):
+    def test_str_returns_title(self):
+        certification = Certification.objects.create(icon="shield-check", title="基本情報技術者試験")
+        self.assertEqual(str(certification), "基本情報技術者試験")
+
+    def test_ordered_by_created_at(self):
+        first = Certification.objects.create(icon="shield-check", title="基本情報技術者試験")
+        second = Certification.objects.create(icon="files", title="簿記実務検定2級")
+        self.assertEqual(list(Certification.objects.all()), [first, second])
