@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Activity, Tag
+from .models import Activity, Certification, Tag
 
 
 class ActivityForm(forms.ModelForm):
@@ -35,3 +35,9 @@ class ActivityForm(forms.ModelForm):
         names = self.cleaned_data.get("tags", [])
         tags = [Tag.objects.get_or_create(name=name)[0] for name in names]
         activity.tags.set(tags)
+
+
+class CertificationForm(forms.ModelForm):
+    class Meta:
+        model = Certification
+        fields = ["icon", "title"]
