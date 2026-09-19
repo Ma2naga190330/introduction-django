@@ -1,6 +1,7 @@
+from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from portfolio.models import Activity, Certification, Tag
+from portfolio.models import Activity, Certification, Skill, Tag
 
 
 class TagModelTest(TestCase):
@@ -43,3 +44,19 @@ class CertificationModelTest(TestCase):
         first = Certification.objects.create(icon="shield-check", title="基本情報技術者試験")
         second = Certification.objects.create(icon="files", title="簿記実務検定2級")
         self.assertEqual(list(Certification.objects.all()), [first, second])
+
+
+class SkillModelTest(TestCase):
+    def test_str_returns_name(self):
+        skill = Skill.objects.create(name="Python / Django")
+        self.assertEqual(str(skill), "Python / Django")
+
+    def test_name_must_be_unique(self):
+        Skill.objects.create(name="Python / Django")
+        with self.assertRaises(IntegrityError):
+            Skill.objects.create(name="Python / Django")
+
+    def test_ordered_by_created_at(self):
+        first = Skill.objects.create(name="HTML5 / CSS3")
+        second = Skill.objects.create(name="Go")
+        self.assertEqual(list(Skill.objects.all()), [first, second])
