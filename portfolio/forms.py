@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Activity, Certification, Tag
+from .models import Activity, Certification, Skill, Tag
 
 
 class ActivityForm(forms.ModelForm):
@@ -41,3 +41,9 @@ class CertificationForm(forms.ModelForm):
     class Meta:
         model = Certification
         fields = ["icon", "title"]
+
+
+class SkillForm(forms.ModelForm):
+    class Meta:
+        model = Skill
+        fields = ["name"]

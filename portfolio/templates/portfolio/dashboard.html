@@ -37,6 +37,7 @@
 
 <section>
   <h2>スキル</h2>
+  <a href="{% url 'portfolio:skill_create' %}">新規登録</a>
   <ul>
     {% for skill in skills %}
       <li>{{ skill.name }}</li>

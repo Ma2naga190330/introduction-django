@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import activity, auth, certification, dashboard, public
+from .views import activity, auth, certification, dashboard, public, skill
 
 app_name = "portfolio"
 
@@ -15,4 +15,5 @@ urlpatterns = [
     path("certifications/new/", certification.certification_create_view, name="certification_create"),
     path("certifications/<int:pk>/edit/", certification.certification_update_view, name="certification_update"),
     path("certifications/<int:pk>/delete/", certification.certification_delete_view, name="certification_delete"),
+    path("skills/new/", skill.skill_create_view, name="skill_create"),
 ]
