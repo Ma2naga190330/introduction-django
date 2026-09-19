@@ -75,6 +75,18 @@ class CertificationUpdateViewTest(TestCase):
         response = self.client.get(reverse("portfolio:certification_update", args=[9999]))
         self.assertEqual(response.status_code, 404)
 
+    def test_post_invalid_data_shows_errors(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:certification_update", args=[self.certification.pk]),
+            {"icon": "shield-check", "title": ""},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.certification.refresh_from_db()
+        self.assertEqual(self.certification.title, "既存の資格")
+
 
 class CertificationDeleteViewTest(TestCase):
     def setUp(self):
@@ -103,6 +115,11 @@ class CertificationDeleteViewTest(TestCase):
 
         self.assertRedirects(response, reverse("portfolio:dashboard"))
         self.assertEqual(Certification.objects.count(), 0)
+
+    def test_get_with_unknown_pk_returns_404(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:certification_delete", args=[9999]))
+        self.assertEqual(response.status_code, 404)
 
     def test_post_confirm_no_keeps_certification(self):
         self.client.login(username="admin", password="password123")

@@ -81,6 +81,18 @@ class SkillUpdateViewTest(TestCase):
         response = self.client.get(reverse("portfolio:skill_update", args=[9999]))
         self.assertEqual(response.status_code, 404)
 
+    def test_post_invalid_data_shows_errors(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:skill_update", args=[self.skill.pk]),
+            {"name": ""},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.skill.refresh_from_db()
+        self.assertEqual(self.skill.name, "既存のスキル")
+
 
 class SkillDeleteViewTest(TestCase):
     def setUp(self):
@@ -106,6 +118,11 @@ class SkillDeleteViewTest(TestCase):
 
         self.assertRedirects(response, reverse("portfolio:dashboard"))
         self.assertEqual(Skill.objects.count(), 0)
+
+    def test_get_with_unknown_pk_returns_404(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:skill_delete", args=[9999]))
+        self.assertEqual(response.status_code, 404)
 
     def test_post_confirm_no_keeps_skill(self):
         self.client.login(username="admin", password="password123")

@@ -74,6 +74,18 @@ class ActivityUpdateViewTest(TestCase):
         response = self.client.get(reverse("portfolio:activity_update", args=[9999]))
         self.assertEqual(response.status_code, 404)
 
+    def test_post_invalid_data_shows_errors(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:activity_update", args=[self.activity.pk]),
+            {"icon": "trophy", "title": "", "tags": ""},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.title, "既存の実績")
+
 
 class ActivityDeleteViewTest(TestCase):
     def setUp(self):
@@ -109,3 +121,8 @@ class ActivityDeleteViewTest(TestCase):
 
         self.assertRedirects(response, reverse("portfolio:dashboard"))
         self.assertEqual(Activity.objects.count(), 1)
+
+    def test_get_with_unknown_pk_returns_404(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:activity_delete", args=[9999]))
+        self.assertEqual(response.status_code, 404)
