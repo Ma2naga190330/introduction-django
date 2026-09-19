@@ -6,3 +6,16 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Activity(models.Model):
+    icon = models.CharField(max_length=50)
+    title = models.CharField(max_length=200)
+    tags = models.ManyToManyField(Tag, blank=True, related_name="activities")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return self.title
