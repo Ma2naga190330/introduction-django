@@ -29,6 +29,7 @@
       <li>
         {{ certification.title }}
         <a href="{% url 'portfolio:certification_update' certification.pk %}">編集</a>
+        <a href="{% url 'portfolio:certification_delete' certification.pk %}">削除</a>
       </li>
     {% endfor %}
   </ul>

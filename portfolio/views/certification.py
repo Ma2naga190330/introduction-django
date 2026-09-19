@@ -30,3 +30,15 @@ def certification_update_view(request, pk):
     return render(
         request, "portfolio/certification_form.html", {"form": form, "certification": certification}
     )
+
+
+@login_required
+def certification_delete_view(request, pk):
+    certification = get_object_or_404(Certification, pk=pk)
+    if request.method == "POST":
+        if request.POST.get("confirm") == "yes":
+            certification.delete()
+        return redirect("portfolio:dashboard")
+    return render(
+        request, "portfolio/certification_confirm_delete.html", {"certification": certification}
+    )
