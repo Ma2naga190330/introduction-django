@@ -10,8 +10,6 @@ class TagModelTest(TestCase):
         self.assertEqual(str(tag), "Winner")
 
     def test_name_must_be_unique(self):
-        from django.db.utils import IntegrityError
-
         Tag.objects.create(name="Winner")
         with self.assertRaises(IntegrityError):
             Tag.objects.create(name="Winner")

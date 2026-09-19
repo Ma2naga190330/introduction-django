@@ -32,7 +32,7 @@ class ActivityForm(forms.ModelForm):
         return activity
 
     def _apply_tags(self, activity):
-        names = self.cleaned_data.get("tags", [])
+        names = self.cleaned_data["tags"]
         tags = [Tag.objects.get_or_create(name=name)[0] for name in names]
         activity.tags.set(tags)
 
