@@ -40,7 +40,10 @@
   <a href="{% url 'portfolio:skill_create' %}">新規登録</a>
   <ul>
     {% for skill in skills %}
-      <li>{{ skill.name }}</li>
+      <li>
+        {{ skill.name }}
+        <a href="{% url 'portfolio:skill_update' skill.pk %}">編集</a>
+      </li>
     {% endfor %}
   </ul>
 </section>

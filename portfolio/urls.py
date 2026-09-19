@@ -16,4 +16,5 @@ urlpatterns = [
     path("certifications/<int:pk>/edit/", certification.certification_update_view, name="certification_update"),
     path("certifications/<int:pk>/delete/", certification.certification_delete_view, name="certification_delete"),
     path("skills/new/", skill.skill_create_view, name="skill_create"),
+    path("skills/<int:pk>/edit/", skill.skill_update_view, name="skill_update"),
 ]
