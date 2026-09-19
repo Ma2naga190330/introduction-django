@@ -28,3 +28,13 @@ def activity_update_view(request, pk):
     else:
         form = ActivityForm(instance=activity)
     return render(request, "portfolio/activity_form.html", {"form": form, "activity": activity})
+
+
+@login_required
+def activity_delete_view(request, pk):
+    activity = get_object_or_404(Activity, pk=pk)
+    if request.method == "POST":
+        if request.POST.get("confirm") == "yes":
+            activity.delete()
+        return redirect("portfolio:dashboard")
+    return render(request, "portfolio/activity_confirm_delete.html", {"activity": activity})

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}活動実績削除確認{% endblock %}
+{% block content %}
+<h1>活動実績削除確認</h1>
+<p>「{{ activity.title }}」を削除します。よろしいですか？</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" name="confirm" value="yes">削除する</button>
+  <button type="submit" name="confirm" value="no">キャンセル</button>
+</form>
+{% endblock %}

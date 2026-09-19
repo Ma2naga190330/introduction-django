@@ -15,6 +15,7 @@
       <li>
         {{ activity.title }}
         <a href="{% url 'portfolio:activity_update' activity.pk %}">編集</a>
+        <a href="{% url 'portfolio:activity_delete' activity.pk %}">削除</a>
       </li>
     {% endfor %}
   </ul>

@@ -73,3 +73,39 @@ class ActivityUpdateViewTest(TestCase):
         self.client.login(username="admin", password="password123")
         response = self.client.get(reverse("portfolio:activity_update", args=[9999]))
         self.assertEqual(response.status_code, 404)
+
+
+class ActivityDeleteViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="admin", password="password123")
+        self.activity = Activity.objects.create(icon="trophy", title="削除対象の実績")
+
+    def test_requires_login(self):
+        url = reverse("portfolio:activity_delete", args=[self.activity.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
+
+    def test_get_shows_confirmation(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:activity_delete", args=[self.activity.pk]))
+        self.assertContains(response, "削除対象の実績")
+
+    def test_post_confirm_yes_deletes_activity(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:activity_delete", args=[self.activity.pk]), {"confirm": "yes"}
+        )
+
+        self.assertRedirects(response, reverse("portfolio:dashboard"))
+        self.assertEqual(Activity.objects.count(), 0)
+
+    def test_post_confirm_no_keeps_activity(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:activity_delete", args=[self.activity.pk]), {"confirm": "no"}
+        )
+
+        self.assertRedirects(response, reverse("portfolio:dashboard"))
+        self.assertEqual(Activity.objects.count(), 1)
