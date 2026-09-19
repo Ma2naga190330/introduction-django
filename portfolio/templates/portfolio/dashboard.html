@@ -26,7 +26,10 @@
   <a href="{% url 'portfolio:certification_create' %}">新規登録</a>
   <ul>
     {% for certification in certifications %}
-      <li>{{ certification.title }}</li>
+      <li>
+        {{ certification.title }}
+        <a href="{% url 'portfolio:certification_update' certification.pk %}">編集</a>
+      </li>
     {% endfor %}
   </ul>
 </section>
