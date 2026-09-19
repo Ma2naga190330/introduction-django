@@ -80,3 +80,39 @@ class SkillUpdateViewTest(TestCase):
         self.client.login(username="admin", password="password123")
         response = self.client.get(reverse("portfolio:skill_update", args=[9999]))
         self.assertEqual(response.status_code, 404)
+
+
+class SkillDeleteViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="admin", password="password123")
+        self.skill = Skill.objects.create(name="削除対象のスキル")
+
+    def test_requires_login(self):
+        url = reverse("portfolio:skill_delete", args=[self.skill.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
+
+    def test_get_shows_confirmation(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:skill_delete", args=[self.skill.pk]))
+        self.assertContains(response, "削除対象のスキル")
+
+    def test_post_confirm_yes_deletes_skill(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:skill_delete", args=[self.skill.pk]), {"confirm": "yes"}
+        )
+
+        self.assertRedirects(response, reverse("portfolio:dashboard"))
+        self.assertEqual(Skill.objects.count(), 0)
+
+    def test_post_confirm_no_keeps_skill(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:skill_delete", args=[self.skill.pk]), {"confirm": "no"}
+        )
+
+        self.assertRedirects(response, reverse("portfolio:dashboard"))
+        self.assertEqual(Skill.objects.count(), 1)

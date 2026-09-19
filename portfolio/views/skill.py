@@ -28,3 +28,13 @@ def skill_update_view(request, pk):
     else:
         form = SkillForm(instance=skill)
     return render(request, "portfolio/skill_form.html", {"form": form, "skill": skill})
+
+
+@login_required
+def skill_delete_view(request, pk):
+    skill = get_object_or_404(Skill, pk=pk)
+    if request.method == "POST":
+        if request.POST.get("confirm") == "yes":
+            skill.delete()
+        return redirect("portfolio:dashboard")
+    return render(request, "portfolio/skill_confirm_delete.html", {"skill": skill})

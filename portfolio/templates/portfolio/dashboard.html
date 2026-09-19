@@ -43,6 +43,7 @@
       <li>
         {{ skill.name }}
         <a href="{% url 'portfolio:skill_update' skill.pk %}">編集</a>
+        <a href="{% url 'portfolio:skill_delete' skill.pk %}">削除</a>
       </li>
     {% endfor %}
   </ul>
