@@ -1,5 +1,7 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
 
 def login_view(request):
@@ -13,3 +15,10 @@ def login_view(request):
             return redirect("portfolio:dashboard")
         error = "ユーザー名またはパスワードが正しくありません。"
     return render(request, "portfolio/login.html", {"error": error})
+
+
+@login_required
+@require_POST
+def logout_view(request):
+    logout(request)
+    return redirect("portfolio:profile")
