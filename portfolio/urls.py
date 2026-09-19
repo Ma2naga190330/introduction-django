@@ -1,5 +1,9 @@
 from django.urls import path
 
+from .views import public
+
 app_name = "portfolio"
 
-urlpatterns = []
+urlpatterns = [
+    path("", public.profile_view, name="profile"),
+]

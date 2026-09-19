@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}松永 悠志 | Portfolio{% endblock %}
+{% block content %}
+<h1>松永 悠志</h1>
+
+<section>
+  <h2>活動・実績</h2>
+  {% if activities %}
+    <ul>
+      {% for activity in activities %}
+        <li>
+          {{ activity.title }}
+          {% for tag in activity.tags.all %}<span class="tag">{{ tag.name }}</span>{% endfor %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>登録された活動実績はまだありません。</p>
+  {% endif %}
+</section>
+
+<section>
+  <h2>保有資格・検定</h2>
+  {% if certifications %}
+    <ul>
+      {% for certification in certifications %}
+        <li>{{ certification.title }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>登録された資格情報はまだありません。</p>
+  {% endif %}
+</section>
+
+<section>
+  <h2>スキル</h2>
+  {% if skills %}
+    <ul>
+      {% for skill in skills %}
+        <li>{{ skill.name }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>登録されたスキルはまだありません。</p>
+  {% endif %}
+</section>
+{% endblock %}
