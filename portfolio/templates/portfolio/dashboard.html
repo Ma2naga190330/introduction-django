@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}管理画面{% endblock %}
+{% block content %}
+<h1>管理画面</h1>
+<form method="post" action="{% url 'portfolio:logout' %}">
+  {% csrf_token %}
+  <button type="submit">ログアウト</button>
+</form>
+
+<section>
+  <h2>活動実績</h2>
+  <ul>
+    {% for activity in activities %}
+      <li>{{ activity.title }}</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section>
+  <h2>資格</h2>
+  <ul>
+    {% for certification in certifications %}
+      <li>{{ certification.title }}</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section>
+  <h2>スキル</h2>
+  <ul>
+    {% for skill in skills %}
+      <li>{{ skill.name }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}
