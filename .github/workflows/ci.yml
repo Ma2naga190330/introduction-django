@@ -54,6 +54,8 @@ jobs:
       DJANGO_DEBUG: "0"
       SECRET_KEY: ci-only-dummy-secret-key-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJ
       ALLOWED_HOSTS: example.com
+      # check --deploy は DB に接続しない。DEBUG 無効時は DATABASE_URL が必須のためダミーを渡す。
+      DATABASE_URL: postgres://u:p@localhost:5432/db
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

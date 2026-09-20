@@ -64,7 +64,8 @@ def settings_of(**env):
 
 class SecretKeyAndDebugTest(SimpleTestCase):
     def test_debug_defaults_to_false(self):
-        self.assertFalse(settings_of(SECRET_KEY="k" * 50)["DEBUG"])
+        conf = settings_of(SECRET_KEY="k" * 50, DATABASE_URL="postgres://user:pass@localhost:5432/dbname")
+        self.assertFalse(conf["DEBUG"])
 
     def test_missing_secret_key_without_debug_raises_improperly_configured(self):
         result = load_settings()
@@ -88,7 +89,12 @@ class SecretKeyAndDebugTest(SimpleTestCase):
     def test_debug_treats_other_values_as_false(self):
         for value in ("0", "false", "no", "off", ""):
             with self.subTest(value=value):
-                self.assertFalse(settings_of(DJANGO_DEBUG=value, SECRET_KEY="k" * 50)["DEBUG"])
+                conf = settings_of(
+                    DJANGO_DEBUG=value,
+                    SECRET_KEY="k" * 50,
+                    DATABASE_URL="postgres://user:pass@localhost:5432/dbname",
+                )
+                self.assertFalse(conf["DEBUG"])
 
 
 class StaticFilesTest(SimpleTestCase):
@@ -131,9 +137,20 @@ class HostsAndOriginsTest(SimpleTestCase):
 
 
 class DatabaseTest(SimpleTestCase):
-    def test_defaults_to_sqlite(self):
+    def test_defaults_to_sqlite_when_debug_is_on(self):
         engine = settings_of(DJANGO_DEBUG="1")["ENGINE"]
         self.assertEqual(engine, "django.db.backends.sqlite3")
+
+    def test_missing_database_url_without_debug_raises_improperly_configured(self):
+        result = load_settings(DJANGO_DEBUG="0", SECRET_KEY="k" * 50)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ImproperlyConfigured", result.stderr)
+        self.assertIn("DATABASE_URL", result.stderr)
+
+    def test_blank_database_url_without_debug_raises_improperly_configured(self):
+        result = load_settings(DJANGO_DEBUG="0", SECRET_KEY="k" * 50, DATABASE_URL="  ")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("DATABASE_URL", result.stderr)
 
     def test_database_url_selects_postgresql(self):
         conf = settings_of(
@@ -144,8 +161,10 @@ class DatabaseTest(SimpleTestCase):
 
 
 class ProductionSecurityTest(SimpleTestCase):
+    DATABASE_URL = "postgres://user:pass@localhost:5432/dbname"
+
     def production(self, **env):
-        return settings_of(DJANGO_DEBUG="0", SECRET_KEY="k" * 50, **env)
+        return settings_of(DJANGO_DEBUG="0", SECRET_KEY="k" * 50, DATABASE_URL=self.DATABASE_URL, **env)
 
     def test_secure_cookies_and_proxy_header_when_debug_is_off(self):
         conf = self.production()
@@ -164,7 +183,12 @@ class ProductionSecurityTest(SimpleTestCase):
         self.assertFalse(conf["SECURE_SSL_REDIRECT"])
 
     def test_non_numeric_hsts_seconds_raises_improperly_configured(self):
-        result = load_settings(DJANGO_DEBUG="0", SECRET_KEY="k" * 50, SECURE_HSTS_SECONDS="abc")
+        result = load_settings(
+            DJANGO_DEBUG="0",
+            SECRET_KEY="k" * 50,
+            DATABASE_URL=self.DATABASE_URL,
+            SECURE_HSTS_SECONDS="abc",
+        )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("ImproperlyConfigured", result.stderr)
         self.assertIn("SECURE_HSTS_SECONDS", result.stderr)
