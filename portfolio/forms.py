@@ -19,7 +19,7 @@ class ActivityForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance.pk:
+        if self.instance.pk and not self.is_bound:
             self.fields["tags"].initial = ", ".join(
                 self.instance.tags.values_list("name", flat=True)
             )
