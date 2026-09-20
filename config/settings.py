@@ -31,6 +31,14 @@ def env_list(name):
     return [item.strip() for item in os.environ.get(name, '').split(',') if item.strip()]
 
 
+def env_int(name, default):
+    value = os.environ.get(name, str(default))
+    try:
+        return int(value)
+    except ValueError:
+        raise ImproperlyConfigured(f'{name} must be an integer, got {value!r}.') from None
+
+
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 DEBUG = env_bool('DJANGO_DEBUG')
@@ -52,7 +60,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG and env_bool('SECURE_SSL_REDIRECT', default=True)
-SECURE_HSTS_SECONDS = 0 if DEBUG else int(os.environ.get('SECURE_HSTS_SECONDS', '3600'))
+SECURE_HSTS_SECONDS = 0 if DEBUG else env_int('SECURE_HSTS_SECONDS', 3600)
 
 # includeSubDomains/preload are hard to undo, so HSTS is deliberately not extended to them.
 SILENCED_SYSTEM_CHECKS = ['security.W005', 'security.W021']
@@ -146,6 +154,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

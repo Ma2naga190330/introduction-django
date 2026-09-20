@@ -4,6 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from django.core.management import call_command
 from django.test import SimpleTestCase
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -21,18 +22,22 @@ MANAGED_ENV_KEYS = (
 
 DUMP_SCRIPT = """
 import json
-import config.settings as s
+import django
+from django.conf import settings
+
+django.setup()
 print(json.dumps({
-    "DEBUG": s.DEBUG,
-    "SECRET_KEY": s.SECRET_KEY,
-    "ALLOWED_HOSTS": s.ALLOWED_HOSTS,
-    "CSRF_TRUSTED_ORIGINS": s.CSRF_TRUSTED_ORIGINS,
-    "ENGINE": s.DATABASES["default"]["ENGINE"],
-    "SESSION_COOKIE_SECURE": s.SESSION_COOKIE_SECURE,
-    "CSRF_COOKIE_SECURE": s.CSRF_COOKIE_SECURE,
-    "SECURE_HSTS_SECONDS": s.SECURE_HSTS_SECONDS,
-    "SECURE_SSL_REDIRECT": s.SECURE_SSL_REDIRECT,
-    "SECURE_PROXY_SSL_HEADER": list(s.SECURE_PROXY_SSL_HEADER),
+    "DEBUG": settings.DEBUG,
+    "SECRET_KEY": settings.SECRET_KEY,
+    "ALLOWED_HOSTS": settings.ALLOWED_HOSTS,
+    "CSRF_TRUSTED_ORIGINS": settings.CSRF_TRUSTED_ORIGINS,
+    "ENGINE": settings.DATABASES["default"]["ENGINE"],
+    "SESSION_COOKIE_SECURE": settings.SESSION_COOKIE_SECURE,
+    "CSRF_COOKIE_SECURE": settings.CSRF_COOKIE_SECURE,
+    "SECURE_HSTS_SECONDS": settings.SECURE_HSTS_SECONDS,
+    "SECURE_SSL_REDIRECT": settings.SECURE_SSL_REDIRECT,
+    "SECURE_PROXY_SSL_HEADER": list(settings.SECURE_PROXY_SSL_HEADER),
+    "STATIC_ROOT": str(settings.STATIC_ROOT),
 }))
 """
 
@@ -52,7 +57,8 @@ def load_settings(**env):
 
 def settings_of(**env):
     result = load_settings(**env)
-    assert result.returncode == 0, result.stderr
+    if result.returncode != 0:
+        raise AssertionError(f"settings failed to load (env={env}):\n{result.stderr}")
     return json.loads(result.stdout)
 
 
@@ -83,6 +89,15 @@ class SecretKeyAndDebugTest(SimpleTestCase):
         for value in ("0", "false", "no", "off", ""):
             with self.subTest(value=value):
                 self.assertFalse(settings_of(DJANGO_DEBUG=value, SECRET_KEY="k" * 50)["DEBUG"])
+
+
+class StaticFilesTest(SimpleTestCase):
+    def test_static_root_is_staticfiles_dir_under_base_dir(self):
+        conf = settings_of(DJANGO_DEBUG="1")
+        self.assertEqual(Path(conf["STATIC_ROOT"]), BASE_DIR / "staticfiles")
+
+    def test_collectstatic_dry_run_succeeds_with_default_settings(self):
+        call_command("collectstatic", interactive=False, dry_run=True, verbosity=0)
 
 
 class HostsAndOriginsTest(SimpleTestCase):
@@ -147,6 +162,12 @@ class ProductionSecurityTest(SimpleTestCase):
         conf = self.production(SECURE_HSTS_SECONDS="60", SECURE_SSL_REDIRECT="0")
         self.assertEqual(conf["SECURE_HSTS_SECONDS"], 60)
         self.assertFalse(conf["SECURE_SSL_REDIRECT"])
+
+    def test_non_numeric_hsts_seconds_raises_improperly_configured(self):
+        result = load_settings(DJANGO_DEBUG="0", SECRET_KEY="k" * 50, SECURE_HSTS_SECONDS="abc")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ImproperlyConfigured", result.stderr)
+        self.assertIn("SECURE_HSTS_SECONDS", result.stderr)
 
     def test_secure_flags_are_off_when_debug_is_on(self):
         conf = settings_of(DJANGO_DEBUG="1")
