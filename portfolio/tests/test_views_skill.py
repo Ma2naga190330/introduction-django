@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from portfolio.models import Skill
@@ -48,6 +48,14 @@ class SkillCreateViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Skill.objects.count(), 1)
 
+    def test_unauthenticated_post_is_rejected_and_creates_nothing(self):
+        url = reverse("portfolio:skill_create")
+
+        response = self.client.post(url, {"name": "不正な登録"})
+
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
+        self.assertEqual(Skill.objects.count(), 0)
+
 
 class SkillUpdateViewTest(TestCase):
     def setUp(self):
@@ -93,6 +101,27 @@ class SkillUpdateViewTest(TestCase):
         self.skill.refresh_from_db()
         self.assertEqual(self.skill.name, "既存のスキル")
 
+    def test_unauthenticated_post_is_rejected_and_changes_nothing(self):
+        url = reverse("portfolio:skill_update", args=[self.skill.pk])
+
+        response = self.client.post(url, {"name": "不正な更新"})
+
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
+        self.skill.refresh_from_db()
+        self.assertEqual(self.skill.name, "既存のスキル")
+
+    def test_post_duplicate_name_shows_errors(self):
+        Skill.objects.create(name="別のスキル")
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:skill_update", args=[self.skill.pk]), {"name": "別のスキル"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.skill.refresh_from_db()
+        self.assertEqual(self.skill.name, "既存のスキル")
+
 
 class SkillDeleteViewTest(TestCase):
     def setUp(self):
@@ -132,4 +161,39 @@ class SkillDeleteViewTest(TestCase):
         )
 
         self.assertRedirects(response, reverse("portfolio:dashboard"))
+        self.assertEqual(Skill.objects.count(), 1)
+
+    def test_get_does_not_delete(self):
+        self.client.login(username="admin", password="password123")
+        url = reverse("portfolio:skill_delete", args=[self.skill.pk])
+
+        self.client.get(url)
+        self.client.get(url, {"confirm": "yes"})
+
+        self.assertEqual(Skill.objects.count(), 1)
+
+    def test_unauthenticated_post_is_rejected_and_deletes_nothing(self):
+        url = reverse("portfolio:skill_delete", args=[self.skill.pk])
+
+        response = self.client.post(url, {"confirm": "yes"})
+
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
+        self.assertEqual(Skill.objects.count(), 1)
+
+    def test_post_with_unknown_pk_returns_404(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.post(
+            reverse("portfolio:skill_delete", args=[9999]), {"confirm": "yes"}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_without_csrf_token_is_forbidden(self):
+        client = Client(enforce_csrf_checks=True)
+        client.login(username="admin", password="password123")
+
+        response = client.post(
+            reverse("portfolio:skill_delete", args=[self.skill.pk]), {"confirm": "yes"}
+        )
+
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(Skill.objects.count(), 1)

@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from portfolio.models import Certification
@@ -38,6 +38,14 @@ class CertificationCreateViewTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(Certification.objects.count(), 0)
+
+    def test_unauthenticated_post_is_rejected_and_creates_nothing(self):
+        url = reverse("portfolio:certification_create")
+
+        response = self.client.post(url, {"icon": "shield-check", "title": "不正な登録"})
+
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
         self.assertEqual(Certification.objects.count(), 0)
 
 
@@ -87,6 +95,15 @@ class CertificationUpdateViewTest(TestCase):
         self.certification.refresh_from_db()
         self.assertEqual(self.certification.title, "既存の資格")
 
+    def test_unauthenticated_post_is_rejected_and_changes_nothing(self):
+        url = reverse("portfolio:certification_update", args=[self.certification.pk])
+
+        response = self.client.post(url, {"icon": "shield-check", "title": "不正な更新"})
+
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
+        self.certification.refresh_from_db()
+        self.assertEqual(self.certification.title, "既存の資格")
+
 
 class CertificationDeleteViewTest(TestCase):
     def setUp(self):
@@ -130,4 +147,39 @@ class CertificationDeleteViewTest(TestCase):
         )
 
         self.assertRedirects(response, reverse("portfolio:dashboard"))
+        self.assertEqual(Certification.objects.count(), 1)
+
+    def test_get_does_not_delete(self):
+        self.client.login(username="admin", password="password123")
+        url = reverse("portfolio:certification_delete", args=[self.certification.pk])
+
+        self.client.get(url)
+        self.client.get(url, {"confirm": "yes"})
+
+        self.assertEqual(Certification.objects.count(), 1)
+
+    def test_unauthenticated_post_is_rejected_and_deletes_nothing(self):
+        url = reverse("portfolio:certification_delete", args=[self.certification.pk])
+
+        response = self.client.post(url, {"confirm": "yes"})
+
+        self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
+        self.assertEqual(Certification.objects.count(), 1)
+
+    def test_post_with_unknown_pk_returns_404(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.post(
+            reverse("portfolio:certification_delete", args=[9999]), {"confirm": "yes"}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_without_csrf_token_is_forbidden(self):
+        client = Client(enforce_csrf_checks=True)
+        client.login(username="admin", password="password123")
+
+        response = client.post(
+            reverse("portfolio:certification_delete", args=[self.certification.pk]), {"confirm": "yes"}
+        )
+
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(Certification.objects.count(), 1)

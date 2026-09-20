@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 
@@ -27,6 +27,16 @@ class LoginViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "ユーザー名またはパスワードが正しくありません。")
 
+    def test_post_without_csrf_token_is_forbidden(self):
+        client = Client(enforce_csrf_checks=True)
+
+        response = client.post(
+            reverse("portfolio:login"), {"username": "admin", "password": "password123"}
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn("_auth_user_id", client.session)
+
 
 class LogoutViewTest(TestCase):
     def setUp(self):
@@ -47,3 +57,20 @@ class LogoutViewTest(TestCase):
         self.assertRedirects(
             response, f"{reverse('portfolio:login')}?next={reverse('portfolio:logout')}"
         )
+
+    def test_post_clears_the_session(self):
+        self.client.login(username="admin", password="password123")
+        self.assertIn("_auth_user_id", self.client.session)
+
+        self.client.post(reverse("portfolio:logout"))
+
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_post_without_csrf_token_is_forbidden(self):
+        client = Client(enforce_csrf_checks=True)
+        client.login(username="admin", password="password123")
+
+        response = client.post(reverse("portfolio:logout"))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("_auth_user_id", client.session)
