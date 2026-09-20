@@ -14,6 +14,11 @@ class TagModelTest(TestCase):
         with self.assertRaises(IntegrityError):
             Tag.objects.create(name="Winner")
 
+    def test_ordered_by_name(self):
+        b = Tag.objects.create(name="organizer")
+        a = Tag.objects.create(name="Winner")
+        self.assertEqual(list(Tag.objects.all()), [a, b])
+
 
 class ActivityModelTest(TestCase):
     def test_str_returns_title(self):
@@ -58,3 +63,10 @@ class SkillModelTest(TestCase):
         first = Skill.objects.create(name="HTML5 / CSS3")
         second = Skill.objects.create(name="Go")
         self.assertEqual(list(Skill.objects.all()), [first, second])
+
+
+class OrderingTieBreakerTest(TestCase):
+    def test_created_at_ordering_falls_back_to_id(self):
+        for model in (Activity, Certification, Skill):
+            with self.subTest(model=model.__name__):
+                self.assertEqual(model._meta.ordering, ["created_at", "id"])
