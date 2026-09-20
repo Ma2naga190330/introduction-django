@@ -39,3 +39,7 @@ DATABASE_URL="postgres://...?sslmode=require" python manage.py createsuperuser
 ## 4. デプロイ
 
 Git リポジトリを Vercel プロジェクトに接続し、`master` へ push すれば自動でデプロイされる。Python のバージョンは `.python-version`（3.13）で指定している。
+
+## 補足: ローカルの Docker
+
+`docker-compose.yml` はローカル開発と CI 用（本番では使わない）。`env_file` の `required: false` を使うため Docker Compose 2.24 以上が必要。
