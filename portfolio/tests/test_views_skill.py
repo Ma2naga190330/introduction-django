@@ -56,6 +56,27 @@ class SkillCreateViewTest(TestCase):
         self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
         self.assertEqual(Skill.objects.count(), 0)
 
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:skill_create"), {"name": "新しいスキル"}, follow=True
+        )
+
+        self.assertContains(response, "スキルを登録しました。")
+
+    def test_invalid_post_shows_no_success_message(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(reverse("portfolio:skill_create"), {}, follow=True)
+
+        self.assertNotContains(response, "を登録しました。")
+
+    def test_form_has_link_back_to_dashboard(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:skill_create"))
+        self.assertContains(response, f'href="{reverse("portfolio:dashboard")}"')
+
 
 class SkillUpdateViewTest(TestCase):
     def setUp(self):
@@ -121,6 +142,15 @@ class SkillUpdateViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.skill.refresh_from_db()
         self.assertEqual(self.skill.name, "既存のスキル")
+
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:skill_update", args=[self.skill.pk]), {"name": "更新後"}, follow=True
+        )
+
+        self.assertContains(response, "スキルを更新しました。")
 
 
 class SkillDeleteViewTest(TestCase):
@@ -197,3 +227,21 @@ class SkillDeleteViewTest(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(Skill.objects.count(), 1)
+
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:skill_delete", args=[self.skill.pk]), {"confirm": "yes"}, follow=True
+        )
+
+        self.assertContains(response, "スキルを削除しました。")
+
+    def test_cancel_shows_no_message(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:skill_delete", args=[self.skill.pk]), {"confirm": "no"}, follow=True
+        )
+
+        self.assertNotContains(response, "を削除しました。")

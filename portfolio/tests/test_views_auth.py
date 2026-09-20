@@ -37,6 +37,12 @@ class LoginViewTest(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertNotIn("_auth_user_id", client.session)
 
+    def test_form_has_autofill_hints(self):
+        response = self.client.get(reverse("portfolio:login"))
+        self.assertContains(response, 'autocomplete="username"')
+        self.assertContains(response, 'autocomplete="current-password"')
+        self.assertContains(response, "autofocus")
+
 
 class LogoutViewTest(TestCase):
     def setUp(self):

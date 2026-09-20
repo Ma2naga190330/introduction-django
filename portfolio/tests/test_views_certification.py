@@ -48,6 +48,27 @@ class CertificationCreateViewTest(TestCase):
         self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
         self.assertEqual(Certification.objects.count(), 0)
 
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:certification_create"), {"icon": "shield-check", "title": "新しい資格"}, follow=True
+        )
+
+        self.assertContains(response, "資格を登録しました。")
+
+    def test_invalid_post_shows_no_success_message(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(reverse("portfolio:certification_create"), {}, follow=True)
+
+        self.assertNotContains(response, "を登録しました。")
+
+    def test_form_has_link_back_to_dashboard(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:certification_create"))
+        self.assertContains(response, f'href="{reverse("portfolio:dashboard")}"')
+
 
 class CertificationUpdateViewTest(TestCase):
     def setUp(self):
@@ -103,6 +124,15 @@ class CertificationUpdateViewTest(TestCase):
         self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
         self.certification.refresh_from_db()
         self.assertEqual(self.certification.title, "既存の資格")
+
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:certification_update", args=[self.certification.pk]), {"icon": "shield-check", "title": "更新後"}, follow=True
+        )
+
+        self.assertContains(response, "資格を更新しました。")
 
 
 class CertificationDeleteViewTest(TestCase):
@@ -183,3 +213,21 @@ class CertificationDeleteViewTest(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(Certification.objects.count(), 1)
+
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:certification_delete", args=[self.certification.pk]), {"confirm": "yes"}, follow=True
+        )
+
+        self.assertContains(response, "資格を削除しました。")
+
+    def test_cancel_shows_no_message(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:certification_delete", args=[self.certification.pk]), {"confirm": "no"}, follow=True
+        )
+
+        self.assertNotContains(response, "を削除しました。")

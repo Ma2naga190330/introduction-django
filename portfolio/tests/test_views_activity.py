@@ -49,6 +49,27 @@ class ActivityCreateViewTest(TestCase):
         self.assertRedirects(response, f"{reverse('portfolio:login')}?next={url}")
         self.assertEqual(Activity.objects.count(), 0)
 
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:activity_create"), {"icon": "trophy", "title": "新しい実績", "tags": ""}, follow=True
+        )
+
+        self.assertContains(response, "活動実績を登録しました。")
+
+    def test_invalid_post_shows_no_success_message(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(reverse("portfolio:activity_create"), {}, follow=True)
+
+        self.assertNotContains(response, "を登録しました。")
+
+    def test_form_has_link_back_to_dashboard(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:activity_create"))
+        self.assertContains(response, f'href="{reverse("portfolio:dashboard")}"')
+
 
 class ActivityUpdateViewTest(TestCase):
     def setUp(self):
@@ -129,6 +150,15 @@ class ActivityUpdateViewTest(TestCase):
 
         self.assertEqual(self.activity.tags.count(), 0)
 
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:activity_update", args=[self.activity.pk]), {"icon": "trophy", "title": "更新後", "tags": ""}, follow=True
+        )
+
+        self.assertContains(response, "活動実績を更新しました。")
+
 
 class ActivityDeleteViewTest(TestCase):
     def setUp(self):
@@ -204,3 +234,21 @@ class ActivityDeleteViewTest(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(Activity.objects.count(), 1)
+
+    def test_success_message_is_shown_on_dashboard(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:activity_delete", args=[self.activity.pk]), {"confirm": "yes"}, follow=True
+        )
+
+        self.assertContains(response, "活動実績を削除しました。")
+
+    def test_cancel_shows_no_message(self):
+        self.client.login(username="admin", password="password123")
+
+        response = self.client.post(
+            reverse("portfolio:activity_delete", args=[self.activity.pk]), {"confirm": "no"}, follow=True
+        )
+
+        self.assertNotContains(response, "を削除しました。")

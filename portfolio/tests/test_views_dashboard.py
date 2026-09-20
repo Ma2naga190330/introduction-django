@@ -23,3 +23,8 @@ class DashboardViewTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "北九州Techハッカソン2025")
+
+    def test_has_link_to_public_profile(self):
+        self.client.login(username="admin", password="password123")
+        response = self.client.get(reverse("portfolio:dashboard"))
+        self.assertContains(response, f'href="{reverse("portfolio:profile")}"')

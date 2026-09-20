@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -11,6 +12,7 @@ def certification_create_view(request):
         form = CertificationForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "資格を登録しました。")
             return redirect("portfolio:dashboard")
     else:
         form = CertificationForm()
@@ -24,6 +26,7 @@ def certification_update_view(request, pk):
         form = CertificationForm(request.POST, instance=certification)
         if form.is_valid():
             form.save()
+            messages.success(request, "資格を更新しました。")
             return redirect("portfolio:dashboard")
     else:
         form = CertificationForm(instance=certification)
@@ -38,6 +41,7 @@ def certification_delete_view(request, pk):
     if request.method == "POST":
         if request.POST.get("confirm") == "yes":
             certification.delete()
+            messages.success(request, "資格を削除しました。")
         return redirect("portfolio:dashboard")
     return render(
         request, "portfolio/certification_confirm_delete.html", {"certification": certification}
