@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: portfolio
+          POSTGRES_PASSWORD: portfolio
+          POSTGRES_DB: portfolio
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U portfolio -d portfolio"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://portfolio:portfolio@localhost:5432/portfolio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python manage.py check
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py test
+
+  deploy-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DJANGO_DEBUG: "0"
+      SECRET_KEY: ci-only-dummy-secret-key-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJ
+      ALLOWED_HOSTS: example.com
+      # check --deploy は DB に接続しない。DEBUG 無効時は DATABASE_URL が必須のためダミーを渡す。
+      DATABASE_URL: postgres://u:p@localhost:5432/db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python manage.py check --deploy --fail-level WARNING
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start stack
+        run: docker compose up -d --build --wait --wait-timeout 180
+      - name: Smoke test
+        run: curl -fsS --retry 10 --retry-delay 3 --retry-connrefused --retry-all-errors --max-time 10 http://localhost:8000/ > /dev/null
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v

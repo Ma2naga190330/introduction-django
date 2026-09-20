@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}管理画面{% endblock %}
+{% block content %}
+<h1>管理画面</h1>
+<p><a href="{% url 'portfolio:profile' %}">プロフィールを見る</a></p>
+<form method="post" action="{% url 'portfolio:logout' %}">
+  {% csrf_token %}
+  <button type="submit">ログアウト</button>
+</form>
+
+<section>
+  <h2>活動実績</h2>
+  <a href="{% url 'portfolio:activity_create' %}">新規登録</a>
+  <ul>
+    {% for activity in activities %}
+      <li>
+        {{ activity.title }}
+        <a href="{% url 'portfolio:activity_update' activity.pk %}">編集</a>
+        <a href="{% url 'portfolio:activity_delete' activity.pk %}">削除</a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section>
+  <h2>資格</h2>
+  <a href="{% url 'portfolio:certification_create' %}">新規登録</a>
+  <ul>
+    {% for certification in certifications %}
+      <li>
+        {{ certification.title }}
+        <a href="{% url 'portfolio:certification_update' certification.pk %}">編集</a>
+        <a href="{% url 'portfolio:certification_delete' certification.pk %}">削除</a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section>
+  <h2>スキル</h2>
+  <a href="{% url 'portfolio:skill_create' %}">新規登録</a>
+  <ul>
+    {% for skill in skills %}
+      <li>
+        {{ skill.name }}
+        <a href="{% url 'portfolio:skill_update' skill.pk %}">編集</a>
+        <a href="{% url 'portfolio:skill_delete' skill.pk %}">削除</a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

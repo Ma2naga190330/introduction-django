@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}管理者ログイン{% endblock %}
+{% block content %}
+<h1>管理者ログイン</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <label>ユーザー名 <input type="text" name="username" autocomplete="username" autofocus required></label>
+  <label>パスワード <input type="password" name="password" autocomplete="current-password" required></label>
+  <button type="submit">ログイン</button>
+</form>
+{% endblock %}

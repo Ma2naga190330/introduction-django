@@ -1,0 +1,44 @@
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+
+from ..forms import ActivityForm
+from ..models import Activity
+
+
+@login_required
+def activity_create_view(request):
+    if request.method == "POST":
+        form = ActivityForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "活動実績を登録しました。")
+            return redirect("portfolio:dashboard")
+    else:
+        form = ActivityForm()
+    return render(request, "portfolio/activity_form.html", {"form": form})
+
+
+@login_required
+def activity_update_view(request, pk):
+    activity = get_object_or_404(Activity, pk=pk)
+    if request.method == "POST":
+        form = ActivityForm(request.POST, instance=activity)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "活動実績を更新しました。")
+            return redirect("portfolio:dashboard")
+    else:
+        form = ActivityForm(instance=activity)
+    return render(request, "portfolio/activity_form.html", {"form": form, "activity": activity})
+
+
+@login_required
+def activity_delete_view(request, pk):
+    activity = get_object_or_404(Activity, pk=pk)
+    if request.method == "POST":
+        if request.POST.get("confirm") == "yes":
+            activity.delete()
+            messages.success(request, "活動実績を削除しました。")
+        return redirect("portfolio:dashboard")
+    return render(request, "portfolio/activity_confirm_delete.html", {"activity": activity})
