@@ -1,0 +1,10 @@
+.git
+.github
+.worktrees
+.superpowers
+docs
+design
+db.sqlite3
+__pycache__
+*.pyc
+.env*
