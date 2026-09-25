@@ -15,7 +15,11 @@ function initThemeToggle() {
   themeToggleBtn.addEventListener('click', () => {
     rootElement.classList.toggle('light-mode');
     const isLightMode = rootElement.classList.contains('light-mode');
-    localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+    try {
+      localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+    } catch (e) {
+      // localStorageが使えない環境(プライベートブラウズ等)では次回訪問時の保持を諦める
+    }
   });
 }
 

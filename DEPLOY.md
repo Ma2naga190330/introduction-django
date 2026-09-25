@@ -44,13 +44,8 @@ Git リポジトリを Vercel プロジェクトに接続し、`master` へ push
 
 `docker-compose.yml` はローカル開発と CI 用（本番では使わない）。`env_file` の `required: false` を使うため Docker Compose 2.24 以上が必要。
 
-## 既知の問題（未対応）: 本番で静的ファイル（CSS/JS/画像）が配信されない
+## 静的ファイル（CSS/JS/画像）の配信
 
-`portfolio/static/portfolio/` 配下の CSS・JS・画像は、`python manage.py runserver`（`DEBUG=True`）でのみ `django.contrib.staticfiles` が自動配信してくれているだけで、本番（Vercel の WSGI ゼロコンフィグ／`gunicorn`）では配信の仕組みが一切ない。
+`portfolio/static/portfolio/` 配下の CSS・JS・画像は `whitenoise`（`config/settings.py` の `MIDDLEWARE`）が配信する。`WHITENOISE_USE_FINDERS = True` にしているため、`collectstatic` を実行するビルドステップは不要（Vercel はゼロコンフィグで `vercel.json`/`api/` もビルドコマンドも挟まないため、`migrate` を手元から手動実行しているのと同じ理由で `collectstatic` に頼らない構成にしている）。`gunicorn`（Docker）でも `runserver`（開発）でも同じ経路で配信される。
 
-- `vercel.json`／`api/` を使わないゼロコンフィグ方針のため、Vercel 側に静的ファイル用の `routes` 設定がない
-- `whitenoise` などの静的ファイル配信ミドルウェアも未導入
-- `collectstatic` を実行するビルドステップもない
-- Docker Compose や CI の `docker` ジョブは `gunicorn` 経由だが、スモークテストは `curl http://localhost:8000/` の 200 しか見ておらず、CSS/JS 自体の配信は確認できていない
-
-このままデプロイすると、ページは表示されるが CSS が当たらず崩れた見た目になる。対応（例: `whitenoise` を導入し `WHITENOISE_USE_FINDERS = True` でビルドステップなしにアプリ内 `static/` から直接配信する等）は別タスクとして行う。
+デプロイ後は Preview/本番 URL の `/static/portfolio/css/style.css` が `200` を返すことを確認すること。

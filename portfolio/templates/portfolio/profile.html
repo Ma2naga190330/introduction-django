@@ -6,9 +6,17 @@
 {% block fouc_prevention %}
 <script>
   (function() {
-    var savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      document.documentElement.classList.add('light-mode');
+    // JSが実行された環境であることを示す(.reveal の CSS はこのクラスがある
+    // ときだけ要素を隠す。main.js が読み込めない/実行されない環境では
+    // このクラスが付かず、コンテンツは最初から表示された状態になる)。
+    document.documentElement.classList.add('js');
+    try {
+      var savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.documentElement.classList.add('light-mode');
+      }
+    } catch (e) {
+      // localStorageが使えない環境(プライベートブラウズ等)では既定のダークテーマのまま
     }
   })();
 </script>
@@ -18,7 +26,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest"></script>
+<script defer src="https://unpkg.com/lucide@1.48.0/dist/umd/lucide.min.js"
+        integrity="sha384-Hh7C333mXel+qppGoFs4qAOXp7h67eur4XsQVF2bvHAM3MQ4DX4cQI7oRCzb98J4"
+        crossorigin="anonymous"></script>
 <link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}">
 {% endblock %}
 
@@ -39,14 +49,14 @@
     </div>
 
     <div class="avatar-wrapper">
-      <img id="avatar-dark" class="avatar" src="{% static 'portfolio/img/PC200086a.JPG' %}" alt="YUJI MATSUNAGA (Dark)">
-      <img id="avatar-light" class="avatar" src="{% static 'portfolio/img/profile_light.jpg' %}" alt="YUJI MATSUNAGA (Light)">
+      <img id="avatar-dark" class="avatar" src="{% static 'portfolio/img/profile_dark.jpg' %}" alt="松永 悠志">
+      <img id="avatar-light" class="avatar" src="{% static 'portfolio/img/profile_light.jpg' %}" alt="">
     </div>
 
     <h1><ruby>松永 悠志<rt>まつなが ゆうじ</rt></ruby></h1>
     <p class="school-info">
       北九州情報ITクリエイター専門学校<br>
-      <span style="font-weight: 300; font-size: 0.85rem; color: var(--text-sub);">情報IT2年生学科 2年生（2026年4月現在）</span>
+      <span class="school-info-sub">情報IT2年生学科 2年生（2026年4月現在）</span>
     </p>
     <p class="organizer-info">
       Startup Weekend 北九州 Organizer / Startup Weekend 新宮町 Organizer<br>
@@ -97,7 +107,7 @@
         </div>
 
         {% if certifications %}
-        <div class="scroll-container" style="max-height: 290px;">
+        <div class="scroll-container">
           <ul class="item-list">
             {% for certification in certifications %}
             <li class="list-item">

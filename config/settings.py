@@ -79,6 +79,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -158,6 +159,13 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise が実際に配信する。Vercel はゼロコンフィグ(vercel.json/api/なし)で
+# ビルドコマンドを挟まないため、collectstatic を実行するステップが存在しない
+# (migrate を手元から手動実行しているのと同じ理由)。そのため collectstatic /
+# ManifestStaticFilesStorage には頼らず、django.contrib.staticfiles のファイン
+# ダーから直接配信する WHITENOISE_USE_FINDERS を使う。
+WHITENOISE_USE_FINDERS = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
