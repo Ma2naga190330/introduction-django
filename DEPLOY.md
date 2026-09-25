@@ -43,3 +43,14 @@ Git リポジトリを Vercel プロジェクトに接続し、`master` へ push
 ## 補足: ローカルの Docker
 
 `docker-compose.yml` はローカル開発と CI 用（本番では使わない）。`env_file` の `required: false` を使うため Docker Compose 2.24 以上が必要。
+
+## 既知の問題（未対応）: 本番で静的ファイル（CSS/JS/画像）が配信されない
+
+`portfolio/static/portfolio/` 配下の CSS・JS・画像は、`python manage.py runserver`（`DEBUG=True`）でのみ `django.contrib.staticfiles` が自動配信してくれているだけで、本番（Vercel の WSGI ゼロコンフィグ／`gunicorn`）では配信の仕組みが一切ない。
+
+- `vercel.json`／`api/` を使わないゼロコンフィグ方針のため、Vercel 側に静的ファイル用の `routes` 設定がない
+- `whitenoise` などの静的ファイル配信ミドルウェアも未導入
+- `collectstatic` を実行するビルドステップもない
+- Docker Compose や CI の `docker` ジョブは `gunicorn` 経由だが、スモークテストは `curl http://localhost:8000/` の 200 しか見ておらず、CSS/JS 自体の配信は確認できていない
+
+このままデプロイすると、ページは表示されるが CSS が当たらず崩れた見た目になる。対応（例: `whitenoise` を導入し `WHITENOISE_USE_FINDERS = True` でビルドステップなしにアプリ内 `static/` から直接配信する等）は別タスクとして行う。
