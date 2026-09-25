@@ -43,3 +43,9 @@ Git リポジトリを Vercel プロジェクトに接続し、`master` へ push
 ## 補足: ローカルの Docker
 
 `docker-compose.yml` はローカル開発と CI 用（本番では使わない）。`env_file` の `required: false` を使うため Docker Compose 2.24 以上が必要。
+
+## 静的ファイル（CSS/JS/画像）の配信
+
+`portfolio/static/portfolio/` 配下の CSS・JS・画像は `whitenoise`（`config/settings.py` の `MIDDLEWARE`）が配信する。`WHITENOISE_USE_FINDERS = True` にしているため、`collectstatic` を実行するビルドステップは不要（Vercel はゼロコンフィグで `vercel.json`/`api/` もビルドコマンドも挟まないため、`migrate` を手元から手動実行しているのと同じ理由で `collectstatic` に頼らない構成にしている）。`gunicorn`（Docker）でも `runserver`（開発）でも同じ経路で配信される。
+
+デプロイ後は Preview/本番 URL の `/static/portfolio/css/style.css` が `200` を返すことを確認すること。

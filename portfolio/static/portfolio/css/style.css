@@ -1,0 +1,543 @@
+:root {
+  --primary: #4682B4; /* SteelBlue */
+  --secondary: #87CEEB; /* SkyBlue */
+  --accent: #87CEFA; /* LightSkyBlue */
+
+  /* デフォルト：ダークモード */
+  --bg-dark: #0a1118;
+  --card-bg: #111d29;
+  --text-main: #f0f4f8;
+  --text-sub: #9ab3c7;
+  --border: #2c4257;
+  --grid-dot-color: rgba(44, 66, 87, 0.5);
+
+  --glow-opacity: 0.07;
+  --bg-dec-opacity: 0.05;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --section-bg: rgba(22, 36, 49, 0.3);
+  --bg-text-opacity: 0.03;
+
+  --transition-speed: 0.5s;
+  --font-main: 'Noto Sans JP', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Golden Ratio Constants */
+  --phi: 1.618;
+}
+
+/* ライトモード */
+:root.light-mode {
+  --bg-dark: #f4f7fa;
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-sub: #475569;
+  --border: #cbd5e1;
+  --grid-dot-color: rgba(203, 213, 225, 0.6);
+
+  --glow-opacity: 0.04;
+  --bg-dec-opacity: 0.03;
+  --shadow-color: rgba(15, 23, 42, 0.08);
+  --section-bg: rgba(255, 255, 255, 0.8);
+  --bg-text-opacity: 0.05;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-dark);
+  /* グリッドドットの色もトランジション対象にするため、CSS変数で定義 */
+  background-image: radial-gradient(var(--grid-dot-color) 0.5px, transparent 0.5px);
+  background-size: 40px 40px;
+  color: var(--text-main);
+  line-height: var(--phi);
+  margin: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  /* すべての基礎カラー、背景の切り替え速度を同期 */
+  transition: background-color var(--transition-speed) ease,
+              color var(--transition-speed) ease,
+              background-image var(--transition-speed) ease;
+}
+
+.bg-decoration {
+  position: fixed;
+  top: -10%;
+  right: -5%;
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, rgba(70, 130, 180, var(--bg-dec-opacity)) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+  transition: background var(--transition-speed) ease;
+}
+
+#cursor-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(70, 130, 180, var(--glow-opacity)) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  #cursor-glow { display: block; }
+}
+
+/* テーマ切り替えコンテナ & ボタンの高度なアニメーション */
+.theme-toggle-container {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+}
+
+.theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.theme-toggle-btn:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  transform: scale(1.08) rotate(15deg);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* アイコンの回転・縮小フェードアウト切り替え */
+.sun-icon, .moon-icon {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  stroke-width: 2px;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ダークモード時：月が隠れて太陽が出る（回転を伴う） */
+:root:not(.light-mode) .moon-icon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+:root:not(.light-mode) .sun-icon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+/* ライトモード時：太陽が隠れて月が出る */
+:root.light-mode .sun-icon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+}
+:root.light-mode .moon-icon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+.container {
+  width: 100%;
+  max-width: calc(500px * var(--phi));
+  margin: 60px auto;
+  padding: 0 30px;
+  position: relative;
+  z-index: 1;
+}
+
+/* JSが動いて <html class="js"> が付いたときだけ隠す。
+   main.js が読み込めない/実行されない環境(JS無効・クローラー等)では
+   .reveal は何も隠さず、常に表示された状態になる。 */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 1s cubic-bezier(0.2, 1, 0.3, 1), transform 1s cubic-bezier(0.2, 1, 0.3, 1);
+}
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Profile Section */
+.profile-card {
+  background: linear-gradient(160deg, var(--card-bg), #0a141d);
+  padding: calc(50px * var(--phi)) 20px;
+  border-radius: 40px;
+  border: 1px solid var(--border);
+  text-align: center;
+  margin-bottom: calc(20px * var(--phi));
+  box-shadow: 0 30px 60px var(--shadow-color);
+  position: relative;
+  overflow: hidden;
+  transition: background var(--transition-speed) ease,
+              border-color var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease;
+}
+
+:root.light-mode .profile-card {
+  background: linear-gradient(160deg, var(--card-bg), #f1f5f9);
+}
+
+/* アバターコンテナ：真のクロスフェード用の２重配置設計 */
+.avatar-wrapper {
+  width: calc(80px * var(--phi));
+  height: calc(80px * var(--phi));
+  margin: 0 auto calc(25px * var(--phi));
+  position: relative;
+  z-index: 2;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--primary);
+  padding: 8px;
+  background: var(--bg-dark);
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* ２枚を重ねてスムーズにクロスフェード */
+  transition: opacity var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1),
+              background var(--transition-speed) ease,
+              border-color var(--transition-speed) ease;
+}
+
+/* デフォルト(ダーク)状態の表示・非表示 */
+#avatar-dark { opacity: 1; z-index: 2; }
+#avatar-light { opacity: 0; z-index: 1; }
+
+/* ライトモード時の表示・非表示(z-indexと不透明度を入れ替える) */
+:root.light-mode #avatar-dark { opacity: 0; z-index: 1; }
+:root.light-mode #avatar-light { opacity: 1; z-index: 2; }
+
+h1 {
+  margin: 0 0 20px;
+  font-size: calc(1.5rem * var(--phi));
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+h1 ruby rt {
+  font-size: 0.35em;
+  color: var(--text-sub);
+  font-weight: 400;
+  letter-spacing: 0.5em;
+  transform: translateY(-5px);
+  transition: color var(--transition-speed) ease;
+}
+
+.school-info {
+  font-size: 1rem;
+  color: var(--text-main);
+  font-weight: 500;
+  margin-bottom: 5px;
+  transition: color var(--transition-speed) ease;
+}
+
+.school-info-sub {
+  font-weight: 300;
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  transition: color var(--transition-speed) ease;
+}
+
+.organizer-info {
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  font-weight: 300;
+  max-width: 550px;
+  margin: 0 auto 40px;
+  line-height: 2;
+  transition: color var(--transition-speed) ease;
+}
+
+.organizer-info a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 4px;
+  transition: all 0.3s ease;
+}
+
+.organizer-info a:hover {
+  color: var(--primary);
+  text-decoration-color: var(--primary);
+}
+
+/* Links Area */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+}
+
+.link-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.02);
+  transition: background var(--transition-speed) ease,
+              border-color 0.3s ease,
+              color 0.3s ease,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root.light-mode .link-btn {
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.link-btn:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(70, 130, 180, 0.2);
+}
+
+.link-btn:hover svg {
+  stroke: #ffffff;
+}
+
+.link-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5px;
+  stroke: var(--secondary);
+  transition: stroke var(--transition-speed) ease;
+}
+
+:root.light-mode .link-btn svg {
+  stroke: var(--primary);
+}
+
+/* Grid Layout */
+.grid-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+}
+
+@media (min-width: 768px) {
+  .grid-layout {
+    grid-template-columns: var(--phi)fr 1fr;
+  }
+}
+
+/* Section Styling & Numbers */
+.section {
+  background: var(--section-bg);
+  backdrop-filter: blur(10px);
+  padding: calc(20px * var(--phi));
+  border-radius: 30px;
+  margin-bottom: 30px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: background var(--transition-speed) ease,
+              border-color var(--transition-speed) ease,
+              transform 0.3s ease;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  position: relative;
+  z-index: 2;
+}
+
+.section-number {
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--primary);
+  opacity: 0.6;
+  line-height: 1;
+  transition: -webkit-text-stroke var(--transition-speed) ease;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin: 0;
+  color: var(--text-main);
+  position: relative;
+  transition: color var(--transition-speed) ease;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 40px;
+  height: 2px;
+  background: var(--primary);
+  transition: background var(--transition-speed) ease;
+}
+
+.section-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  font-weight: 400;
+  margin-left: 4px;
+  transition: color var(--transition-speed) ease;
+}
+
+/* Scroll container for lists to keep heights consistent */
+.scroll-container {
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+.scroll-container::-webkit-scrollbar {
+  width: 4px;
+}
+.scroll-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+  transition: background var(--transition-speed) ease;
+}
+
+/* Items */
+.item-list { list-style: none; padding: 0; margin: 0; position: relative; z-index: 2; }
+.list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(44, 66, 87, 0.3);
+  transition: border-bottom var(--transition-speed) ease;
+}
+:root.light-mode .list-item {
+  border-bottom: 1px solid rgba(203, 213, 225, 0.6);
+}
+.list-item:last-child { border-bottom: none; }
+
+.item-icon {
+  color: var(--secondary);
+  margin-top: 4px;
+  transition: color var(--transition-speed) ease;
+}
+
+:root.light-mode .item-icon {
+  color: var(--primary);
+}
+
+.item-content {
+  flex-grow: 1;
+  font-size: 1rem;
+  font-weight: 400;
+  transition: color var(--transition-speed) ease;
+}
+
+.award-tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(135, 206, 250, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color var(--transition-speed) ease, background var(--transition-speed) ease;
+}
+
+:root.light-mode .award-tag {
+  color: var(--primary);
+  background: rgba(70, 130, 180, 0.08);
+  border: 1px solid rgba(70, 130, 180, 0.2);
+}
+
+/* Tags */
+.tags { display: flex; flex-wrap: wrap; gap: 10px; }
+.tag {
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-sub);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  transition: background var(--transition-speed) ease,
+              color 0.3s ease,
+              border-color 0.3s ease,
+              transform 0.3s ease;
+}
+:root.light-mode .tag {
+  background: rgba(15, 23, 42, 0.01);
+}
+.tag:hover {
+  border-color: var(--secondary);
+  color: var(--text-main);
+  background: rgba(70, 130, 180, 0.1);
+  transform: translateY(-2px);
+}
+:root.light-mode .tag:hover {
+  border-color: var(--primary);
+  background: rgba(70, 130, 180, 0.05);
+}
+
+footer {
+  text-align: center;
+  margin: 80px 0 40px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  opacity: 0.4;
+  letter-spacing: 0.4em;
+  transition: color var(--transition-speed) ease;
+}
+
+/* Background large text shadow */
+.section-bg-text {
+  position: absolute;
+  right: -20px;
+  bottom: -20px;
+  font-family: var(--font-mono);
+  font-size: 8rem;
+  font-weight: 700;
+  color: var(--primary);
+  opacity: var(--bg-text-opacity);
+  pointer-events: none;
+  user-select: none;
+  transition: opacity var(--transition-speed) ease, color var(--transition-speed) ease;
+}

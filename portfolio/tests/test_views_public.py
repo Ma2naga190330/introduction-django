@@ -73,3 +73,18 @@ class ProfileViewTest(TestCase):
 
         self.assertNotIn('href="mailto:ktq2590310@stu.o-hara.ac.jp" target', content)
         self.assertEqual(content.count('target="_blank"'), content.count('rel="noopener noreferrer"'))
+
+    def test_loads_own_css_and_js(self):
+        response = self.client.get(reverse("portfolio:profile"))
+
+        self.assertContains(response, "portfolio/css/style.css")
+        self.assertContains(response, "portfolio/js/main.js")
+
+    def test_renders_lucide_icon_for_each_activity_and_certification(self):
+        Activity.objects.create(icon="trophy", title="北九州Techハッカソン2025")
+        Certification.objects.create(icon="shield-check", title="基本情報技術者試験")
+
+        response = self.client.get(reverse("portfolio:profile"))
+
+        self.assertContains(response, '<i data-lucide="trophy">', count=1)
+        self.assertContains(response, '<i data-lucide="shield-check">', count=1)
